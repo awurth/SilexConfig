@@ -245,6 +245,7 @@ class ConfigurationLoader
         if ($this->options->areParametersEnabled()) {
             if (isset($configuration[$this->options->getParametersKey()])) {
                 $this->parameterBag->add($configuration[$this->options->getParametersKey()]);
+                $this->parameterBag->resolve();
             }
 
             $this->resolvePlaceholders($configuration);
@@ -325,10 +326,8 @@ class ConfigurationLoader
     {
         $values = (array) $this->loader->load($file);
 
-        if (!empty($values)) {
-            if ($this->options->areImportsEnabled()) {
-                $values = $this->loadImports($values, $file);
-            }
+        if (!empty($values) && $this->options->areImportsEnabled()) {
+            $values = $this->loadImports($values, $file);
         }
 
         $this->resources[] = new FileResource($file);

@@ -187,10 +187,10 @@ class ParameterBag
      * @throws ParameterCircularReferenceException if a circular reference if detected
      * @throws RuntimeException                    when a given parameter has a type problem
      */
-    public function resolveString($value, array $resolving = array())
+    public function resolveString($value, array $resolving = [])
     {
-        // we do this to deal with non string values (Boolean, integer, ...)
-        // as the preg_replace_callback throw an exception when trying
+        // We do this to deal with non-string values (boolean, integer, ...)
+        // as the preg_replace_callback throws an exception when trying
         // a non-string in a parameter value
         if (preg_match('/^%([^%\s]+)%$/', $value, $match)) {
             $key = $match[1];
@@ -205,7 +205,7 @@ class ParameterBag
         }
 
         return preg_replace_callback('/%%|%([^%\s]+)%/', function ($match) use ($resolving, $value) {
-            // skip %%
+            // Skip %%
             if (!isset($match[1])) {
                 return '%%';
             }

@@ -1,0 +1,36 @@
+{
+    "name": "awurth/config",
+    "description": "A configuration loader for PHP",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexis Wurth",
+            "email": "awurth.dev@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^5.5.9|>=7.0.8",
+        "silex/silex": "^2.0",
+        "symfony/config": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.4",
+        "symfony/yaml": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "AWurth\\Silex\\Config\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AWurth\\Silex\\Config\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "suggest": {
+        "symfony/yaml": "The Symfony YAML component"
+    }
+}

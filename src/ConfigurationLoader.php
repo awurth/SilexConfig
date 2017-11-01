@@ -329,9 +329,9 @@ class ConfigurationLoader
             if ($this->options->areImportsEnabled()) {
                 $values = $this->loadImports($values, $file);
             }
-
-            $this->resources[] = new FileResource($file);
         }
+
+        $this->resources[] = new FileResource($file);
 
         return $values;
     }

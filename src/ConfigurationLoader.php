@@ -323,7 +323,7 @@ class ConfigurationLoader
      */
     protected function parseFile($file)
     {
-        $values = $this->loader->load($file);
+        $values = (array) $this->loader->load($file);
 
         if (!empty($values)) {
             if ($this->options->areImportsEnabled()) {

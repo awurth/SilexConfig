@@ -95,31 +95,10 @@ class ConfigurationLoader
         $this->resources = [];
 
         if (null !== $this->cache) {
-            if (!$this->cache->isFresh()) {
-                $this->export($this->loadFile($file));
-            }
-
-            $configuration = self::requireFile($this->cache->getPath(), $this->container);
-
-            if ($this->options->getUseParameterBag()) {
-                $this->parameterBag->add($configuration[$this->options->getParametersKey()]);
-                unset($configuration[$this->options->getParametersKey()]);
-            }
-
-            return $configuration;
+            return $this->loadWithCache($file);
         }
 
-        $configuration = $this->loadFile($file);
-
-        if ($this->options->getUseParameterBag()) {
-            unset($configuration[$this->options->getParametersKey()]);
-        }
-
-        if ($this->options->areServicesEnabled()) {
-            $configuration = $this->resolveServices($configuration);
-        }
-
-        return $configuration;
+        return $this->loadWithoutCache($file);
     }
 
     /**
@@ -165,24 +144,6 @@ class ConfigurationLoader
     public function getLoaders()
     {
         return $this->loaders;
-    }
-
-    /**
-     * Gets the file loader.
-     *
-     * @return LoaderInterface
-     */
-    protected function getLoader()
-    {
-        if (null === $this->loader) {
-            $this->addLoader(new PhpFileLoader());
-            $this->addLoader(new YamlFileLoader());
-            $this->addLoader(new JsonFileLoader());
-
-            $this->loader = new DelegatingLoader(new LoaderResolver($this->loaders));
-        }
-
-        return $this->loader;
     }
 
     /**
@@ -272,6 +233,24 @@ class ConfigurationLoader
     public function setOptions(Options $options)
     {
         $this->options = $options;
+    }
+
+    /**
+     * Gets the file loader.
+     *
+     * @return LoaderInterface
+     */
+    protected function getLoader()
+    {
+        if (null === $this->loader) {
+            $this->addLoader(new PhpFileLoader());
+            $this->addLoader(new YamlFileLoader());
+            $this->addLoader(new JsonFileLoader());
+
+            $this->loader = new DelegatingLoader(new LoaderResolver($this->loaders));
+        }
+
+        return $this->loader;
     }
 
     /**
@@ -365,6 +344,51 @@ class ConfigurationLoader
         unset($values[$importsKey]);
 
         return $values;
+    }
+
+    /**
+     * Loads the configuration from a cache file.
+     *
+     * @param string $file
+     *
+     * @return array
+     */
+    protected function loadWithCache($file)
+    {
+        if (!$this->cache->isFresh()) {
+            $this->export($this->loadFile($file));
+        }
+
+        $configuration = self::requireFile($this->cache->getPath(), $this->container);
+
+        if ($this->options->getUseParameterBag()) {
+            $this->parameterBag->add($configuration[$this->options->getParametersKey()]);
+            unset($configuration[$this->options->getParametersKey()]);
+        }
+
+        return $configuration;
+    }
+
+    /**
+     * Loads the configuration from a configuration file.
+     *
+     * @param string $file
+     *
+     * @return array
+     */
+    public function loadWithoutCache($file)
+    {
+        $configuration = $this->loadFile($file);
+
+        if ($this->options->getUseParameterBag()) {
+            unset($configuration[$this->options->getParametersKey()]);
+        }
+
+        if ($this->options->areServicesEnabled()) {
+            $configuration = $this->resolveServices($configuration);
+        }
+
+        return $configuration;
     }
 
     /**

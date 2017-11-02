@@ -140,6 +140,24 @@ class ConfigurationLoader
     }
 
     /**
+     * Gets the file loader.
+     *
+     * @return LoaderInterface
+     */
+    protected function getLoader()
+    {
+        if (null === $this->loader) {
+            $this->addLoader(new PhpFileLoader());
+            $this->addLoader(new YamlFileLoader());
+            $this->addLoader(new JsonFileLoader());
+
+            $this->loader = new DelegatingLoader(new LoaderResolver($this->loaders));
+        }
+
+        return $this->loader;
+    }
+
+    /**
      * Adds a file loader.
      *
      * @param LoaderInterface $loader
@@ -194,20 +212,6 @@ class ConfigurationLoader
     }
 
     /**
-     * Initializes the file loader.
-     */
-    protected function initLoader()
-    {
-        if (null === $this->loader) {
-            $this->addLoader(new PhpFileLoader());
-            $this->addLoader(new YamlFileLoader());
-            $this->addLoader(new JsonFileLoader());
-
-            $this->loader = new DelegatingLoader(new LoaderResolver($this->loaders));
-        }
-    }
-
-    /**
      * Returns whether the file path is an absolute path.
      *
      * @param string $file
@@ -238,8 +242,6 @@ class ConfigurationLoader
      */
     protected function loadFile($file)
     {
-        $this->initLoader();
-
         $configuration = $this->parseFile($file);
 
         if ($this->options->areParametersEnabled()) {
@@ -324,7 +326,7 @@ class ConfigurationLoader
      */
     protected function parseFile($file)
     {
-        $values = (array) $this->loader->load($file);
+        $values = (array) $this->getLoader()->load($file);
 
         if (!empty($values) && $this->options->areImportsEnabled()) {
             $values = $this->loadImports($values, $file);

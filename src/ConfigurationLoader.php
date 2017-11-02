@@ -192,6 +192,41 @@ class ConfigurationLoader
     }
 
     /**
+     * Gets a parameter.
+     *
+     * @param string $name
+     *
+     * @return mixed
+     */
+    public function getParameter($name)
+    {
+        return $this->parameterBag->get($name);
+    }
+
+    /**
+     * Checks if a parameter exists.
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function hasParameter($name)
+    {
+        return $this->parameterBag->has($name);
+    }
+
+    /**
+     * Sets a parameter.
+     *
+     * @param string $name
+     * @param mixed  $value
+     */
+    public function setParameter($name, $value)
+    {
+        $this->parameterBag->set($name, $value);
+    }
+
+    /**
      * Gets the options.
      *
      * @return Options

@@ -14,6 +14,7 @@ namespace AWurth\Silex\Config;
 use AWurth\Silex\Config\Loader\JsonFileLoader;
 use AWurth\Silex\Config\Loader\PhpFileLoader;
 use AWurth\Silex\Config\Loader\YamlFileLoader;
+use Pimple\Container;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\ConfigCacheInterface;
 use Symfony\Component\Config\Loader\DelegatingLoader;
@@ -32,6 +33,11 @@ class ConfigurationLoader
      * @var ConfigCacheInterface
      */
     protected $cache;
+
+    /**
+     * @var Container
+     */
+    protected $container;
 
     /**
      * @var LoaderInterface
@@ -61,14 +67,16 @@ class ConfigurationLoader
     /**
      * Constructor.
      *
-     * @param string $cachePath
-     * @param bool   $debug
+     * @param string|null    $cachePath
+     * @param bool           $debug
+     * @param Container|null $container
      */
-    public function __construct($cachePath = null, $debug = false)
+    public function __construct($cachePath = null, $debug = false, Container $container = null)
     {
-        $this->resources     = [];
-        $this->options       = new Options();
-        $this->parameterBag  = new ParameterBag();
+        $this->resources    = [];
+        $this->options      = new Options();
+        $this->parameterBag = new ParameterBag();
+        $this->container    = $container;
 
         if (null !== $cachePath) {
             $this->cache = new ConfigCache($cachePath, $debug);
@@ -91,10 +99,27 @@ class ConfigurationLoader
                 $this->export($this->loadFile($file));
             }
 
-            return self::requireFile($this->cache->getPath());
+            $configuration = self::requireFile($this->cache->getPath(), $this->container);
+
+            if ($this->options->getUseParameterBag()) {
+                $this->parameterBag->add($configuration[$this->options->getParametersKey()]);
+                unset($configuration[$this->options->getParametersKey()]);
+            }
+
+            return $configuration;
         }
 
-        return $this->loadFile($file);
+        $configuration = $this->loadFile($file);
+
+        if ($this->options->getUseParameterBag()) {
+            unset($configuration[$this->options->getParametersKey()]);
+        }
+
+        if ($this->options->areServicesEnabled()) {
+            $configuration = $this->resolveServices($configuration);
+        }
+
+        return $configuration;
     }
 
     /**
@@ -104,7 +129,10 @@ class ConfigurationLoader
      */
     public function export(array $configuration)
     {
-        $content = '<?php'.PHP_EOL.PHP_EOL.'return '.var_export($configuration, true).';'.PHP_EOL;
+        $export = var_export($configuration, true);
+        $export = $this->resolveExportServices($export);
+
+        $content = '<?php'.PHP_EOL.PHP_EOL.'return '.$export.';'.PHP_EOL;
 
         $this->cache->write($content, $this->resources);
     }
@@ -285,7 +313,7 @@ class ConfigurationLoader
                 $this->parameterBag->resolve();
             }
 
-            $configuration = $this->resolve($configuration);
+            $configuration = $this->resolveParameters($configuration);
         }
 
         return $configuration;
@@ -379,7 +407,7 @@ class ConfigurationLoader
      *
      * @return array
      */
-    protected function resolve(array $configuration)
+    protected function resolveParameters(array $configuration)
     {
         $values = [];
         foreach ($configuration as $key => $value) {
@@ -391,13 +419,50 @@ class ConfigurationLoader
     }
 
     /**
-     * Includes a PHP file.
+     * Replaces service placeholders ("@service") by their values in the exported PHP code.
      *
-     * @param string $file
+     * @param string $code
+     *
+     * @return string
+     */
+    protected function resolveExportServices($code)
+    {
+        return preg_replace_callback('/\'@([^@\s]+)\'/', function ($matches) {
+            return '$container[\''.$matches[1].'\']';
+        }, $code);
+    }
+
+    /**
+     * Replaces service placeholders ("@service") by their values.
+     *
+     * @param array $configuration
      *
      * @return array
      */
-    private static function requireFile($file)
+    protected function resolveServices(array $configuration)
+    {
+        array_walk_recursive($configuration, function (&$item) {
+            if (is_string($item) && 0 === strpos($item, '@')) {
+                if (preg_match('/^@([^@\s]+)$/', $item, $match)) {
+                    $item = $this->container[$match[1]];
+                } else {
+                    $item = str_replace('@@', '@', $item);
+                }
+            }
+        });
+
+        return $configuration;
+    }
+
+    /**
+     * Includes a PHP file.
+     *
+     * @param string         $file
+     * @param Container|null $container
+     *
+     * @return array
+     */
+    private static function requireFile($file, Container $container = null)
     {
         return require $file;
     }

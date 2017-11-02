@@ -29,6 +29,11 @@ class Options
     protected $enableParameters = true;
 
     /**
+     * @var bool
+     */
+    protected $enableServices = true;
+
+    /**
      * @var string
      */
     protected $importsKey = 'imports';
@@ -37,6 +42,11 @@ class Options
      * @var string
      */
     protected $parametersKey = 'parameters';
+
+    /**
+     * @var bool
+     */
+    protected $useParameterBag = true;
 
     /**
      * Tells whether imports are enabled.
@@ -57,7 +67,7 @@ class Options
      */
     public function setEnableImports($enabled)
     {
-        $this->enableImports = $enabled;
+        $this->enableImports = (bool) $enabled;
 
         return $this;
     }
@@ -73,7 +83,6 @@ class Options
     }
 
     /**
-     *
      * Sets whether to enable parameters.
      *
      * @param bool $enabled
@@ -82,7 +91,31 @@ class Options
      */
     public function setEnableParameters($enabled)
     {
-        $this->enableParameters = $enabled;
+        $this->enableParameters = (bool) $enabled;
+
+        return $this;
+    }
+
+    /**
+     * Tells whether services are enabled.
+     *
+     * @return bool
+     */
+    public function areServicesEnabled()
+    {
+        return $this->enableServices;
+    }
+
+    /**
+     * Sets whether to enable services.
+     *
+     * @param bool $enabled
+     *
+     * @return self
+     */
+    public function setEnableServices($enabled)
+    {
+        $this->enableServices = (bool) $enabled;
 
         return $this;
     }
@@ -106,7 +139,7 @@ class Options
      */
     public function setImportsKey($key)
     {
-        $this->importsKey = $key;
+        $this->importsKey = (string) $key;
 
         return $this;
     }
@@ -130,7 +163,31 @@ class Options
      */
     public function setParametersKey($key)
     {
-        $this->parametersKey = $key;
+        $this->parametersKey = (string) $key;
+
+        return $this;
+    }
+
+    /**
+     * Returns whether to use the ParameterBag or an array of parameters.
+     *
+     * @return bool
+     */
+    public function getUseParameterBag()
+    {
+        return $this->enableParameters && $this->useParameterBag;
+    }
+
+    /**
+     * Sets whether to use the ParameterBag or an array of parameters.
+     *
+     * @param bool $boolean
+     *
+     * @return self
+     */
+    public function setUseParameterBag($boolean)
+    {
+        $this->useParameterBag = (bool) $boolean;
 
         return $this;
     }

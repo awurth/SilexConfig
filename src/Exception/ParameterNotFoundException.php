@@ -33,6 +33,11 @@ class ParameterNotFoundException extends \InvalidArgumentException
         $this->key = $key;
     }
 
+    /**
+     * Gets the key.
+     *
+     * @return string
+     */
     public function getKey()
     {
         return $this->key;

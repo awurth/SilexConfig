@@ -248,7 +248,7 @@ class ConfigurationLoader
                 $this->parameterBag->resolve();
             }
 
-            $this->resolvePlaceholders($configuration);
+            $configuration = $this->resolve($configuration);
         }
 
         return $configuration;
@@ -336,41 +336,21 @@ class ConfigurationLoader
     }
 
     /**
-     * Parses the configuration and replaces placeholders with the corresponding parameters values.
+     * Replaces parameter placeholders (%name%) by their values for all parameters.
      *
      * @param array $configuration
-     */
-    protected function resolvePlaceholders(array &$configuration)
-    {
-        array_walk_recursive($configuration, [$this, 'resolveStringPlaceholders']);
-    }
-
-    /**
-     * Replaces configuration placeholders with the corresponding parameter values.
      *
-     * @param string $string
+     * @return array
      */
-    protected function resolveStringPlaceholders(&$string)
+    protected function resolve(array $configuration)
     {
-        if (is_string($string)) {
-            if (preg_match('/^%([0-9A-Za-z._-]+)%$/', $string, $match)) {
-                $key = $match[1];
-
-                if ($this->parameterBag->has($key)) {
-                    $string = $this->parameterBag->get($key);
-                }
-            } else {
-                $string = preg_replace_callback('/%([0-9A-Za-z._-]+)%/', function ($match) {
-                    $key = $match[1];
-
-                    if ($this->parameterBag->has($key) && is_scalar($this->parameterBag->get($key))) {
-                        return (string) $this->parameterBag->get($key);
-                    }
-
-                    return $match[0];
-                }, $string);
-            }
+        $values = [];
+        foreach ($configuration as $key => $value) {
+            $value = $this->parameterBag->resolveValue($value);
+            $values[$key] = $this->parameterBag->unescapeValue($value);
         }
+
+        return $values;
     }
 
     /**

@@ -176,7 +176,7 @@ class ParameterBag
     }
 
     /**
-     * Resolves parameters inside a string.
+     * Resolves parameters in a string.
      *
      * @param string $value     The string to resolve
      * @param array  $resolving An array of keys that are being resolved (used internally to detect circular references)
@@ -204,6 +204,22 @@ class ParameterBag
             return $this->resolved ? $this->get($key) : $this->resolveValue($this->get($key), $resolving);
         }
 
+        return $this->resolveInsideString($value, $resolving);
+    }
+
+    /**
+     * Resolves parameters inside a string.
+     *
+     * @param string $value     The string to resolve
+     * @param array  $resolving An array of keys that are being resolved (used internally to detect circular references)
+     *
+     * @return string The resolved string
+     *
+     * @throws ParameterCircularReferenceException if a circular reference if detected
+     * @throws RuntimeException                    when a given parameter has a type problem
+     */
+    protected function resolveInsideString($value, array $resolving = [])
+    {
         return preg_replace_callback('/%%|%([^%\s]+)%/', function ($match) use ($resolving, $value) {
             // Skip %%
             if (!isset($match[1])) {
